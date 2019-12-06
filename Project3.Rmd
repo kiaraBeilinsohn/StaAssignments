@@ -1,0 +1,373 @@
+---
+title: "STA3030F Assignment 3"
+author: "Kiara Beilinsohn"
+date: "4/22/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(kableExtra)
+```
+
+## Introduction
+
+The data for this project represents proportions of infant birds surviving to adulthood at various locations. The beta distribution is useful for modelling this, as it often models data which lies between 0 and 1. The pdf of the beta distribution is shown below, noting that $\beta$ and $\alpha$ are greater than 0:
+
+$$f(x) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)} x^{\alpha -1}(1-x)^{\beta-1}$$
+
+For this project we will be estimating both the $\beta$ and $\alpha$ parameters using R and excel methods. The aim of the assignment is to fit a beta distribution to the data and perform a goodness-of-fit test on the distribution.
+
+
+## Question 1: 
+
+data = c(0.658760658,	0.928971401	,0.842943952,0.508333565,0.657546099,0.635335118,	0.440458789,0.488153204,0.910936447,0.44179225,0.832158101,0.759574661,0.506418231,0.541490007,0.879809129,0.822131406,0.829105149,0.889004285,0.537892284,0.969078343)
+
+The initial data was analysed. Below the data is analysed through a box and wisker plot, the data seems to be relatively symetrically distrbuted with a small skewness to the left. It has a first quatile equal to 0.5305, a median equal to 0.7082, a mean equal to 0.7040 and a third quatile equal to 0.8522.The standard deviation is equal to 0.189.  The 5 number summary can also be seen below:
+
+
+```{r, echo =FALSE}
+# Question 1
+data = c(0.658760658,	0.928971401	,0.842943952,0.508333565,0.657546099,0.635335118,	0.440458789,0.488153204,0.910936447,0.44179225,0.832158101,0.759574661,0.506418231,0.541490007,0.879809129,0.822131406,0.829105149,0.889004285,0.537892284,0.969078343)
+
+boxplot(data,main="Box-and-Whisker")
+summary(data)
+print('Standard deviation: ')
+sd(data)
+
+```
+
+A plot of the distribution can be shown below and the data points seem to have no linear relationship or dependence on each other.The histogram indicates that the data does not appear to have a specific distribution, it is not normally distributed.
+
+```{r, echo =FALSE}
+plot(data,xlab = 'Proportion of Survivors', main='Scatter plot of Proportion of Survivors')
+hist(data,xlab = 'Proportion of Survivors', main='Histogram of Proportion of Survivors', col = "light blue")
+
+```
+
+
+## Ouestion 2:
+
+We will also be interested in being able to obtain its maximum likelihood estimators (MLEs) and showing that the values obtained, are indeed, good estimators.
+
+The first step is to derive the likelihood function of the distribution. This is done by taking the product of f(x) n times. Doing so provides the following equation: 
+
+$$L(\alpha, \beta| x) = \Pi_{i=1}^{n}\frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}x_i^{\alpha -1}(1-x_i)^{\beta -1}$$
+The next step is to derive the natural logarithm of the likelihood function as it is easier to work with. This is due to the fact that the logarithm is a striclty increasing funtion and therefore the logarithm of a function achieves its maximum at the same point(s) as the original funtion. The log-likelihood function obtained is: 
+
+$$LogL(\alpha, \beta|x) = nlog(\Gamma(\alpha + \beta)) -nlog(\Gamma(\alpha)) - nlog(\Gamma(\beta))+(\alpha -1)\sum_{i=1}^{n}log(x_i) + (\beta -1)\sum_{i=1}^{n}log(1-x_i) $$
+
+This function was derived in R and the value of $\beta$ was set to 3, while the value of $\alpha$ was a generated sequence of numbers from 0.0001 to 15. Thereafter a graph was plotted for the value of $\alpha$ against the log likelihood with a fixed value of 3 for $\beta$. This can be seen plotted below:
+
+
+```{r, echo =FALSE}
+# Question 2
+# alphas, beta, and n
+b <- 3
+a <- seq(from = 0.00001, to = 15, length = 1000)
+n <- length(data)
+
+# loglikelihood function
+x <- as.matrix(data)
+loglike <- function(a)
+{
+  return(n*(log(gamma(a+b)) - log(gamma(a)) - log(gamma(b))) + (a-1)*sum(log(x)) + (b-1)*sum(log(1-x)))
+}
+
+llofa <- loglike(a = a)
+
+plot(a,llofa, type = "l", xlab = "Sequence of alphas", ylab = "Log-Likelihood", ylim = c(-100, 5))
+
+# estimate max
+amax <- 7
+
+abline(v = amax, col = "red")
+# max loglikelihood
+m <- loglike(amax)
+```
+\
+Through analysing the above likelihood plot it can be seen that the value of $\alpha$ that maximises the function is 7 (the MLE), yeilding a likelihood of `r m` (this is where the red line intercepts the function).
+
+## Question 3:
+
+The following question was performed using excel solver to  obtain maximum likelihood estimates of both $\alpha$ and $\beta$. The detailed method done using excel solver can be seen in the appendix. Below is the simplified steps followed:
+
+1.  The data (xi) was inputted into column B.
+
+2.  Parameter $\alpha$ was stored in B25, and $\beta$ in. The total number of obsevations, n (20), was also stored, B28. The log -liklihood was stored in B31.
+
+3.  $ln(x_i)$ and $ln(x_i-1)]$ needed to be calculated for each data point and the totals were calculated. In addition the values for $\alpha$, $\beta$, x, (x-1) , $\Gamma(x)$ and $ln\Gamma(x)$ were stored.
+
+4.  I then used the relevant values along with the log-likelihood formula to obtain a value and stored it in B31.
+
+5.  Thereafter I used the Solver tool in Excel to maximise the estimates of $\alpha$ and $\beta$.
+
+6. Since there is no definite greater than, ">", option in solver, I used ">=0.00001"  as a constraint, since they should all be ">0".
+
+7.  Using the GRG Nonlinear solving method (due to the fact that the log-likelihood function is not linear), the estimates we obtain are as follows:
+
+$$\hat{\alpha} =4,036087093 $$
+$$\hat\beta = 1,667578959$$
+$$log-likelihood =  8,14$$ 
+
+## Question 4:
+
+The chi-squared goodness of fit test can be used to check the if of the distribution obtained from question 3 is a good fit for the data.In this case four bins are specifically used.
+
+The hypotheses for this test are:
+
+
+$H_0$: There is no difference between the expected data values and the observed data values, the distribution fits the data well.\
+
+$H_1$: There is a difference between the expected data values and the observed data values, the distribution does not fit the data well.\
+
+```{r, echo =FALSE}
+# Question 4
+# vector of probs
+prob.bins <- seq(0.25, 1, by = 0.25)
+
+# theretically quarter of data should lie between each quantile
+# thereotical quantiles 
+ther.quants <- qbeta(prob.bins, shape1 = amax, shape2 = b)
+
+# what is observed in data
+# observed bins
+sorted.data <- sort(data)
+bin1 <- sorted.data[1:7]
+bin2 <- sorted.data[8:10]
+bin3 <- sorted.data[11]
+bin4 <- sorted.data[12:20]
+
+# for the test stat - (O-E)^2/E the sum of them
+s1 <- (length(bin1)- 5)^2/5
+s2 <- (length(bin2)- 5)^2/5
+s3 <- (length(bin3)- 5)^2/5
+s4 <- (length(bin4)- 5)^2/5
+ 
+test.stat <- s1 + s2 + s3 + s4
+  
+# find p-value
+pvalue <- (1 - pchisq(q = test.stat, df =1 ))
+# therefore since < 0.05 we reject H0
+```
+
+Below the test statistic was calculated by splitting the sorted data into four bins each 0.25 apart. Then using the qbeta() function the data was grouped into the various quatiles and the value of each quantile was calculated. these being `r ther.quants`. Then the observed values were calculated by counting the number of values within each quantile. Next the expected value was calculated for each quantile that being 5 (20/4). Therafter for the test statistic was calculated using the following formula (this was across the bins):
+
+$$\sum_{i=1}^4 \frac{(Observed - Expected)^2}{Expected} \sim \chi^2_1$$
+
+
+The test statistic yeiled is `r test.stat `.
+
+Next, the pvalue was calculated using a $X^2$ statistic with k-d-1 degrees of freedom, thus with four (k) bins and two estimated parameters (d). The degrees of freedom is 1. This yeilded a pvalue of `r pvalue`. Since the pvalue is less then 0.005, we reject  $H_0$ at the 5% significance level and conclude that the data does not fit the beta distribution well.
+
+## Question 5: 
+
+To determine whether the values obtained are suitable estimates for the parameters, we look at the Q-Q and P-P plots.
+In order to generate the P-P plot, the data was sorted and ranked from smallest to largest and then each data point was assigneed a rank from 1 to 20.  The rank is notated by k.\
+k is then divided by n to get the theoretical probabilities.
+due to the fact that k cannot be equal to n, we adjust the probabilities with the following formula:
+$$\frac{k-0.25}{n+0.5}$$ The culmulative probabilities using the pbeta() function was then calculated. 
+The sample values were placed into the pbeta function with the estimates for $\alpha$ and $\beta$ that were calculated in question 3. This generates the culmulative probabilities of observing these values.\
+
+The QQ-Plot is made by plotting the observed data against the theoretical quantiles.
+The theoretical quantiles are generated using the qbeta function in R with the same values as above for $\alpha$ and $\beta$, by inputting the adjusted probabilities into the function. 
+
+In order to see whether the values obtained are good estimates for the parameters, we look at the Q-Q Plot. This plots $x_{(k)}$ values directly against the predicted values, $F^{-1}(\frac{k-0.25}{n+0.5})$, where $k$ is the different ranks.
+
+```{r, echo= FALSE}
+# Q-Q Plot
+#function for Q-Q plot
+##### Inserted just to make table as there was a non numeric type (closure type)
+k<-seq(1,20,by = 1)
+kadj<-(k-0.25)/(n+0.5)
+xk=sort(data)
+fxk=pbeta(xk,4.036087093,1.667578959, lower.tail = T)
+n=length(data)
+k<-seq(1,20,by = 1)
+
+#QQ-Plot
+finv=qbeta(kadj,4.036087093,1.667578959, lower.tail = T)
+matrix(c(xk,finv,fxk),ncol=3)
+######
+
+
+ sorted.data <- sort(data)
+ F.xk <- function(seq, a,b)
+   {
+    pbeta(seq,a,b)
+   }
+
+ k.adj <- function(n){
+   k = 1:n
+   (k-0.25) / (n + 0.5)
+ }
+
+ seq <- seq(from = 0, to = 1, length= 20)
+ Cum.probs <- F.xk(seq, 4.036087093,1.667578959)
+ Emp.probs <- k.adj(20)
+
+  F.inv <- function(seq,a , b){
+   qbeta(seq,a,b)
+ }
+
+
+ Theor.quant <- F.inv(Emp.probs, 4.036087093,1.667578959)
+ plot(sorted.data ~ Theor.quant, ylab = "Empirical quantiles", xlab = "Theoretical quantiles", main = "Q-Q plot", cex.lab = 1.5, xlim=c(0,1),ylim=c(0,1))
+ abline(0, 1, col = "blue")
+
+
+```
+
+```{r, echo = FALSE}
+##### Inserted just to make table as there was a non numeric type (closure type)
+k<-seq(1,20,by = 1)
+n=length(data)
+k<-seq(1,20,by = 1)
+kadj<-(k-0.25)/(n+0.5)
+xk=sort(data)
+fxk=pbeta(xk,4.036087093,1.667578959, lower.tail = T)
+
+#####
+
+ k<-seq(1,20,by = 1)
+
+
+F.xk <- function(seq, a,b)
+  {
+   pbeta(seq,a,b)
+  }
+
+k.adj <- function(n){
+  k = 1:n
+  (k-0.25) / (n + 0.5)
+}
+k<-seq(1,20,by = 1)
+Cum.probs <- F.xk(sorted.data, 4.036087093,1.667578959)
+Emp.probs <- k.adj(20)
+
+plot(Emp.probs ~ Cum.probs, ylab = "Empirical probabilities (adjusted)", xlab = "Theoretical probabilities", main = "P-P plot", cex.lab = 1.5, xlim=c(0,1), ylim=c(0,1))
+abline(0,1, col = "blue")
+```
+
+A table of all the values used for calculating the PP and QQ plot is summarised below.
+
+```{r, echo = FALSE}
+table=matrix(round(c(k,kadj,xk,fxk,finv),4),ncol=5)
+kable(table,format='markdown', col.names=c('k','Adj k/n', 'xk','fxk','finv'))
+```
+
+Through analysing the above P-P plot and Q-Q plot it can be said that the model is a relatively bad fit, and can be improved since  there is a lot of deviation from the straight line through the origin, a better model can be implemented. We can conclude that the values for the estimators are average and that distribution used to fit the data is valid in this context, but can be significantly improved.
+
+
+##  Conclusion
+
+Through the use of the maximum liklihood estimation procedure we are able to obtain the estimated parameters ($\alpha$ and $\beta$). We can confirm the fit of these parameters by viewing the P-P nad Q-Q plot, with the data provided, when using the estimations, does not closely approximate the straight line through the origin. Therefore showing that the distribution using the estimators is an average fit for the data. We can also make conclusions about the fit of the distribution via the chi-squared goodness of fit test, which in this case reveals that it is not a good fit.
+
+# Appendix:
+
+# Code:
+
+```{r, echo = TRUE, eval = FALSE}
+# Loading in the data
+data = c(0.658760658,	0.928971401	,0.842943952,0.508333565,0.657546099,0.635335118,	0.440458789,0.488153204,0.910936447,0.44179225,0.832158101,0.759574661,0.506418231,0.541490007,0.879809129,0.822131406,0.829105149,0.889004285,0.537892284,0.969078343)
+
+# Question 1: Give brief descriptive statistics or graphical displays of the data
+hist(data, col = "lightblue")
+boxplot(data,main="Box-and-Whisker")
+summary(data)
+print('Standard deviation: ')
+sd(data)
+plot(data)
+
+# Question 2
+# alphas and beta, n
+b <- 3
+a <- seq(from = 0.00001, to = 15, length = 1000)
+n <- length(data)
+
+# loglikelihood function
+x <- as.matrix(data)
+loglike <- function(a)
+{
+  return(n*(log(gamma(a+b)) - log(gamma(a)) - log(gamma(b))) + (a-1)*sum(log(x)) + (b-1)*sum(log(1-x)))
+}
+
+llofa <- loglike(a = a)
+
+plot(a,llofa, type = "l", xlab = "Sequence of alphas", ylab = "Log-Likelihood", ylim = c(-100, 5))
+
+# estimate max
+amax <- 7
+
+abline(v = amax, col = "red")
+
+# max loglikelihood
+loglike(amax)
+
+
+# Question 4
+# vector of probs
+prob.bins <- seq(0.25, 1, by = 0.25)
+
+# theretically quarter of data should lie between each quantile
+# thereotical quantiles 
+ther.quants <- qbeta(prob.bins, shape1 = amax, shape2 = b)
+
+# what is observed in data
+# observed bins
+sorted.data <- sort(data)
+bin1 <- sorted.data[1:7]
+bin2 <- sorted.data[8:10]
+bin3 <- sorted.data[11]
+bin4 <- sorted.data[12:20]
+
+# for the test stat - (O-E)^2/E the sum of them
+s1 <- (length(bin1)- 5)^2/5
+s2 <- (length(bin2)- 5)^2/5
+s3 <- (length(bin3)- 5)^2/5
+s4 <- (length(bin4)- 5)^2/5
+ 
+test.stat <- s1 + s2 + s3 + s4
+  
+# find p-value
+pvalue <- (1 - pchisq(q = test.stat, df =1 )) # check with someone dof 17
+print(pvalue)
+
+# therefore since > 0.05 we fail to reject H0
+
+
+# Question 5
+# P-P  plot
+
+
+#functions for P-P plot
+seq <- seq(from = 0.5, to = 1, length= 100)
+
+F.xk <- function(seq, a,b)
+  {
+   pbeta(seq,a,b)
+  }
+
+k.adj <- function(n){
+  k = 1:n
+  (k-0.25) / (n + 0.5) 
+}
+
+Cum.probs <- F.xk(sorted.data, 4.036087093,1.667578959)
+Emp.probs <- k.adj(20)
+
+plot(Emp.probs ~ Cum.probs, ylab = "Empirical probabilities (adjusted)", xlab = "Theoretical probabilities", main = "P-P plot", cex.lab = 1.5, xlim = c(0,1), ylim = c(0,1))
+abline(0,1, col = "blue")
+
+
+# Q-Q Plot
+#function for Q-Q plot
+F.inv <- function(seq,a , b){
+  qbeta(seq,a,b)
+}
+
+Theor.quant <- F.inv(Emp.probs, 4.036087093,1.667578959)
+plot(sorted.data ~ Theor.quant, ylab = "Empirical quantiles", xlab = "Theoretical quantiles", main = "Q-Q plot", cex.lab = 1.5, xlim = c(0,1), ylim = c(0,1))
+abline(0, 1, col = "blue")
+```

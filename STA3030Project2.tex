@@ -1,0 +1,259 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={STA3030 Project 2},
+            pdfauthor={Kiara Beilinsohn},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{STA3030 Project 2}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Kiara Beilinsohn}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{13 March 2019}
+
+
+\begin{document}
+\maketitle
+
+\subsection{Introduction}\label{introduction}
+
+The ojective for this assignemnt is to analyse the data from two sample
+datasets. The datasets C1 and D2 were utiliesed. The first segemnt of
+data for this project was obtained from 30 different people who filled
+in a form before and after it was changed (paired t test), the times
+were recorded. The data was collected by the internal revenue service as
+they were looking for ways to improve the wording and format of its tax
+return forms.The aim for this study is to test if there is significant
+differences in the completion time. The second segment of this data was
+obtained from a study perfomed by the Columbia University with regards
+to two different departmends and the amount of times lectures said
+``uh'' and ``ah'' in lectures to fill the gap between words. 50
+observations were taken from each department. This assignment focuses on
+testing weather there are significant differences between each of the
+groups in the different data sets. It will focus on the differences in
+means and variences, using a variety of different methods; namely
+Bootstrap resampling and Standard Normal theory. The results will also
+provide us with a condifence interval for the differnece between the two
+means.
+
+The data provided is as follows:\\
+form1 = 23, 59, 68, 122, 74, 90, 70, 87, 155, 120, 124, 103, 54, 90,
+124, 80, 69, 123, 76, 71, 94, 167, 69, 105, 98, 73, 79, 61, 121, 56\\
+form2 = 88, 114, 81, 41, 108, 92, 52, 54, 103, 50, 135, 76, 143, 124,
+151, 96, 76, 128, 60, 127, 109, 122, 88, 109, 90, 56, 105, 64, 127, 104
+
+\subsection{Question 1}\label{question-1}
+
+Question 1, involves a bootstrapping method. I created 5000 bootstrapped
+statistics by replicating the original sampling process. I resample by
+placing all observations from the original sample into a hat, then
+drawing the wanted observations from the hat with replacement to form a
+bootstrap sample. A mean is then calculated for each bootstrap sample,
+the first 5 of these values can be seen below. I then subtract these
+means from the two bootstrap samples of the different original samples
+to obtain a specific bootstrap statistic, which I store in an array.
+This is done 5000 times.
+
+The hypothesis for this test are::\\
+\(H_{0} : \mu_n = \mu_p\) (There is no difference in the population
+means)\\
+\(H_{1} : \mu_n \ne \mu_p\) (The form1 population mean is different to
+the form2 population mean)
+
+I let \(\bar{x_b}\) denote the bootstrap statistic and \(\bar{x_d}\)
+denote the difference between the means of the original samples.
+Therefore the sampling error is \(\bar{x_b}-\bar{x_d}\).Then the
+observed discrepencies are calculated which is \(\bar{x_d}-0\) under the
+null hypothesis. The p-value is then calculated using
+\(p=Pr(\bar{x_b}-\bar{x_d}\geq \bar{x_d}-0)=Pr(\bar{x_b}\geq2\bar{x_d}-0)\).
+The p-value through bootstrapping is 0.1552.
+
+The p-value is defined as the probability of observing a similar or more
+extreme result, assuming the null hypothesis is true. With the
+calculated pvalue, it can be concluded that there is strong evidence to
+fail to reject the null hypothesis and conclude that there is no
+difference in the performance on the two forms and that the population
+means are equal.
+
+\begin{verbatim}
+## [1] "First five values:"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 2.233333
+## [1] -22.63333
+## [1] 7.266667
+## [1] -6.633333
+## [1] -5.666667
+\end{verbatim}
+
+\begin{verbatim}
+## [1] "The pvalue is:"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 0.1552
+\end{verbatim}
+
+In addition the analysis of the bootstrap Mean through a histogram
+displays a symetrical distribution which looks approxematly like the
+Normal distribution, this can be seen below:
+
+\includegraphics{STA3030Project2_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\subsection{Question 2}\label{question-2}
+
+Question 2 involves calculating the 95\% confidence interval for the
+difference in means. It makes use of the bootstrap principle:
+(\(\bar{x_b}-\bar{x}\approx\bar{x}-\mu)\)) as it uses bootstrapping
+theory.
+
+\begin{verbatim}
+## [1] "The 95% confidence intervals for the means is"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] -26.333   4.533
+\end{verbatim}
+
+\subsection{Question 3}\label{question-3}
+
+The data used for Question 3 is as follows:
+
+dept1 = 4, 9, 8, 7, 4, 4, 8, 7, 9, 0, 7, 4, 7, 8, 4, 4, 7, 5, 0, 3, 3,
+1, 3, 3, 4, 7, 10, 8, 7, 5, 1, 5, 3, 4, 5, 10, 5, 8, 4, 4, 4, 9, 5, 9,
+5, 7, 3, 8, 10, 4\\
+dept2 = 5, 4, 9, 5, 5, 5, 6, 4, 5, 5, 4, 0, 6, 7, 4, 3, 3, 6, 7, 4, 5,
+1, 8, 9, 5, 9, 4, 7, 0, 9, 5, 6, 4, 5, 5, 6, 5, 5, 3, 4, 5, 6, 4, 3, 8,
+3, 5, 7, 8, 8
+
+\section{Using Bootstrapping:}\label{using-bootstrapping}
+
+\begin{verbatim}
+## [1] "The F statistic is"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 1.543412
+\end{verbatim}
+
+\begin{verbatim}
+## [1] "The pvalue is"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 0.5054
+\end{verbatim}
+
+An anyalysis of the bootstrap variences plotted as a histogram
+demonstrated a relativly F distributed distribution as seen below:
+
+\includegraphics{STA3030Project2_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\subsection{Question 4}\label{question-4}
+
+\section{Using Normal theory}\label{using-normal-theory}
+
+\begin{verbatim}
+## 
+##  F test to compare two variances
+## 
+## data:  dept2 and dept1
+## F = 0.64792, num df = 49, denom df = 49, p-value = 0.1322
+## alternative hypothesis: true ratio of variances is not equal to 1
+## 95 percent confidence interval:
+##  0.3676765 1.1417489
+## sample estimates:
+## ratio of variances 
+##          0.6479153
+\end{verbatim}
+
+\begin{verbatim}
+## [1] "The pvalue is:"
+\end{verbatim}
+
+\begin{verbatim}
+## [1] 0.1322171
+\end{verbatim}
+
+A comparision of the results from Q3 Bootstrapping method and Q4 normal
+theroy method shows: \#\# Question 5
+
+An interpretation of results can be seen as follows:
+
+\subsection{Conclusion}\label{conclusion}
+
+
+\end{document}

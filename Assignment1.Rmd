@@ -1,0 +1,301 @@
+---
+title: "Assignment1"
+author: "Kiara Beilinsohn"
+date: "26 February 2019"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+The objective of this study is to analyse the data from the Income and Expenditure Survey conducted by Statistcs South Africa for a given year. The aim is to investigate confidence intervals for the age part of the data, perform hypothesis on the age data and construct a 95% confidence intervel for the upper quartile of the household income data. In addition the anyalysis of histograms is performed. To solve this problem we will use both the bootstrap sampling method and standard normal theory.
+
+## The data
+The sample of the data was taken from the Income and Expenditure Survey by Statistics South Africa. The whole dataset is seen first, then the age data, and lastly the hhinc data  (created with my index 143). A section of this data can all be seen below:
+
+
+```{r}
+mydata <-read.table("incexp.txt",header=TRUE)
+age = mydata$AGE[143:(143+99)]
+hhinc =mydata$HHINCOME[143:(143+29)]
+print("All the data")
+head(mydata)
+print("Age data")
+age
+print("hhinc data")
+hhinc
+```
+
+## Question 1: Explanitary data analysis
+
+Histograms, boxplots and summaries are shown below with regards to the age and hhinc data. This is done by running the hist(), boxplot(), summary() and IQR() functions.
+
+For Age data:
+The histogram produced shows that the data does not fit ant particular distribution, it is therefore a non-parametric distribution as it doesnt fit for example generic distributions such as the Normal distribution.
+
+The boxplot shows that the distribution is slightly skewed to the right and the mean for the data is 42.00, the lower quartile is 33.00 and the upper quartile is 51.00 (as seen by the summary below), thus the Inter quatile range is 18.
+
+```{r, echo=FALSE}
+hist(age, col = "lightblue")
+boxplot(age,main="Box-and-Whisker for age data")
+print("summary of age data")
+summary(age)
+IQR(age)
+
+```
+
+
+For the hhinc data:
+The histogram produced shows that the data is relativly symetrically distributed around the median and displays a Normal distrubution.
+The boxplot also conveys a symetrical distribution with a mean of 22444, the lower quatile being 21106 and the upper quartile being 2409, thus the Inter Quatile range is 2983.515. This can be seen below:
+
+
+```{r, echo=FALSE}
+hist(hhinc, col= "lightblue")
+boxplot(hhinc,main="Box-and-Whisker plot for hhinc data")
+print("summary of hhinc data")
+summary(hhinc)
+IQR(hhinc)
+```
+
+
+
+## Question 2: 95% confidence interval for the population mean age
+## a) Bootstrapping approach
+
+We make the assumption of the bootstrap principle where $(\bar{x_b}-\bar{x}\approx\bar{x}-\mu)$. Theres an assuption that the information is unbiased as it is made up of independant mesurements that is representative of the sample.
+
+Bootstrapping was performed by resampling. The resampling was repeated 4000 times with replacement. The mean for each bootstrap sample was placed into an array. This information (in the array) was then used to calculate the 95% confidence interval for the mean.
+
+
+The confidence interval is as calculated below using Bootstrapping:
+
+```{r, echo=FALSE}
+
+bstr <- matrix(0,ncol=100,nrow=4000)
+for( i in 1:4000)
+{
+  samp=sample(age,size=100,replace=TRUE)
+  bstr[i,]=samp
+}
+
+#sorting the means:
+bstrm=apply(bstr,1,mean)
+
+#print(bstrm)
+bootstrapMean <- mean(bstrm)
+
+sortmean=sort(bstrm)
+# 95 % CI 
+lowBound <- sortmean[0.025*4000]
+upBound <- sortmean[0.975*4000]
+cat("(",lowBound, ",",upBound,")")
+
+```
+
+
+## b) Using normal theory
+
+This is based on the central limit theorem and therefore for large enough n we can assume $$\bar{X}\sim N(\mu,\sigma^2/n)$$. 
+
+In order to calculate the confidence interval manually the following formula was used:
+$$(\bar{x}-z_{\alpha}\frac{\theta}{\sqrt[1]{n}} < u < (\bar{x}+z_{\alpha}\frac{\theta}{\sqrt[1]{n}})$$
+
+The confidence interval is as calculated below using normal theory: 
+```{r, echo=FALSE}
+#x-u/sd/sqrtn - formula to use
+sampleMean <- mean(age)
+standardDev <- sd(age)
+n <- length(age)
+sqrtn <- sqrt(n)
+
+
+#getting the crit value for conf interval, using a t value as the population varience is unknown:
+tval<-qt(0.975,99)
+lowerbound<-sampleMean-tval*(standardDev/sqrtn)
+upperbound<-sampleMean+tval*(standardDev/sqrtn) 
+cat("(",round(lowerbound,2)," , ",round(upperbound,2),")",sep="")
+
+```
+
+
+## Question 3:  Using the bootstrap resampling theory to arrive at a conclusion about the following hypothesis test.$H_{0} : \mu_{age} \geq 43$, $H_{1} : \mu_{age} < 43$
+
+
+Using boostrap statistics, we first find the sampling errors which are $\bar{x_b}-\bar{x}$. Then see the observed discrepency $\bar{x}-\mu$ where $\mu=10$. Now we sum the bootstrap sample errors that are less than the discrepency divided by the total number of bootstrap sample.
+In order to calculate the pValue the number of means over 43 plus the error portion was was calculated, then to get the pvlaue the number of those above 43 plus the error was divided by the size of the full sample, as seen:
+
+$$pValue = \frac{sum}{size Of Sample}$$
+
+It can be determened that we fail to reject $H_{0}$ as the pvalue is significanly larger then 0.05, as it is `pValue` and we can conclude at the 5% significance level that $\mu_{age} \geq$ 43.
+
+The pvalue can be seen below:
+
+```{r, echo=FALSE}
+# bootstrap mean - sample mean 
+# count bootstrap means > 
+bEr <- bootstrapMean - 43
+meansOver43 <- (bstrm > 43 + bEr )
+sum <- sum(meansOver43)
+
+pValue <- sum/4000 #the number of whole sample
+pValue
+```
+
+## Question 4:  histogram of the distribution of the sample mean for age
+
+```{r, echo=FALSE}
+hist(bstrm, col = "lightblue")
+```
+
+The histogram reveals a symetrical shape (symetrical around the mean 42.11 ), which appears to have equal tails and be approximatly normally distributed.
+
+## Question 5: 95 % confidence interval for the household income upper quartile $\varepsilon0.75$ 
+
+The confidence interval was worked out via the formula:
+
+$$(\frac{r-0.5-np}{\sqrt[1]{np(1-p)}} < z < \frac{s-0.5-np}{\sqrt[1]{np(1-p)}})$$
+Since the confidence interval is for $\varepsilon0.75$ , we use a correction factor of 0.5, and a probability p equal to 0.75, and n equal to the length of hhinc (in this case it is 30). in this case r and s are the corresponding postitions in the sorted hhinc data (ie the data is now in order from highest to lowest) to obtain the confidence interval. As shown below:
+
+```{r, echo=FALSE}
+cf <- 0.5
+p <- 0.75
+n <- length(hhinc)
+z <- qnorm(0.975)
+sortHhinc <- sort(hhinc)
+# getting r the lower limit for the confidence interval
+
+r <- round(cf +n*p+(-z)*sqrt(n*p*(1-p)))
+lowerBound <- sortHhinc[r]
+
+# getting s the upper limit for the confidence interval
+s <- round(cf +n*p+(z)*sqrt(n*p*(1-p)))
+upperBound <- sortHhinc[s]
+
+# conf interval
+cat("(", lowerBound, " , ", upperBound, ")")
+```
+
+##  Conclusion
+
+The data from the Income and Expenditure Survey conducted by Statistcs South Africa for a given year was analysed through histograms (which was found to be normal for question 4), boxplots and summaries - for question one. Various methods such as the bootstrap resampling method and normal theory method was used to construct a 95% confidence intervals and conduct hypothesis, this was done for question two. It was found that the confidence interval for the bootstrapping method was: (`r lowBound` , `r upBound` ) and the normal theory confidence intervak was ( `r lowerbound` , `r upperbound` ). For question 3 the pValu was found to be pValue thus failing to reject $H_{0}$ at the 5% significance level. For question 5 the 95 % confidence interval for the household income upper quartile  $\varepsilon0.75$  was found to be ( 23302.44  ,  24799.02 ).
+
+## Plagarism Decleration
+I know that plagiarism is wrong. Plagiarism is to use another's work and pretend that it is one's own. My work will not be copied by another student with the intention of passing it off as his own work.
+
+Signed:
+
+
+
+
+--------------------------------------------------------------------------------------------------
+
+## R code
+
+```{r, echo = TRUE, eval = FALSE}
+## R studio code:
+# Assignment 1 Kiara Beilinsohn BLNKIA001
+
+# loading in data and declaring variables
+mydata <-read.table("incexp.txt",header=TRUE)
+age = mydata$AGE[143:(143+99)]
+hhinc =mydata$HHINCOME[143:(143+29)]
+
+# checkcing the size of each vector
+length(age)
+length(hhinc)
+
+### QUESTION 1 ### exploritary data analysis:
+hist(age, col = "lightblue")
+boxplot(age,main="Box-and-Whisker")
+summary(age)
+
+hist(hhinc, col = "lightblue")
+boxplot(hhinc,main="Box-and-Whisker")
+summary(hhinc)
+
+
+# QUESTION 2 Bootstrapping for age approach a)
+
+bstr <- matrix(0,ncol=100,nrow=4000)
+for( i in 1:4000)
+{
+  samp=sample(age,size=100,replace=TRUE)
+  bstr[i,]=samp
+}
+
+#sorting the means:
+bstrm=apply(bstr,1,mean)
+
+#print(bstrm)
+bootstrapMean <- mean(bstrm)
+
+sortmean=sort(bstrm)
+# 95 % CI 
+print("Bootstrapping method")
+lowBound <- sortmean[0.025*4000]
+upBound <- sortmean[0.975*4000]
+cat("(",lowBound, ",",upBound,")")
+
+# standard normal theory approach b)
+#x-u/sd/sqrtn - formula to use
+sampleMean <- mean(age)
+standardDev <- sd(age)
+n <- length(age)
+sqrtn <- sqrt(n)
+
+
+#getting the crit value for conf interval, using a t value as the population varience is unknown:
+tval<-qt(0.975,99)
+lowerBound<-sampleMean-tval*(standardDev/sqrtn)
+upperBound<-sampleMean+tval*(standardDev/sqrtn)
+print("Theory method")
+cat("(",round(lowerBound,2)," , ",round(upperBound,2),")",sep="")
+
+##########################################################################
+# QUESTION 3 hypothesis test H0: u<= 43 H1: U>43
+#meanGta43
+
+# bootstrap mean - sample mean 
+# count bootstrap means > 
+bEr <- bootstrapMean - 43
+meansOver43 <- (bstrm > 43 + bEr )
+sum <- sum(meansOver43)
+
+pValue <- sum/4000 #the number of whole sample
+pValue
+##############################################################################
+
+# QUESTION 4 
+hist(bstrm, col = "lightblue")
+# it is a symetrical distribution which appears to have equal tals and be approximatly normally distributed
+
+
+# QUESTION 5 
+cf <- 0.5
+p <- 0.75
+n <- length(hhinc)
+z <- qnorm(0.975)
+sortHhinc <- sort(hhinc)
+# getting r the lower limit for the confidence interval
+
+r <- round(cf +n*p+(-z)*sqrt(n*p*(1-p)))
+lowerBound <- sortHhinc[r]
+
+# getting s the upper limit for the confidence interval
+s <- round(cf +n*p+(z)*sqrt(n*p*(1-p)))
+upperBound <- sortHhinc[s]
+
+# conf interval
+cat("(", lowerBound, " , ", upperBound, ")")
+
+
+
+```
+
